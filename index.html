@@ -7,13 +7,14 @@
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f7f7f7; }
     h1 { text-align: center; }
-    input { padding: 8px; width: 100%; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; background: #fff; }
+    input, button { padding: 8px; width: 100%; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     th { background: #eee; }
     td div.zh { color: #555; font-size: 0.9em; margin-top: 2px; }
     a { text-decoration: none; color: #007BFF; }
     a:hover { text-decoration: underline; }
+    .form-container { background: #fff; padding: 15px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -24,102 +25,56 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-    const initialBibliography = [
-      {
-        id: "akkermans-2003",
-        title: "The archaeology of Syria: from complex hunter-gatherers to early urban societies (c. 16,000-300 BC)",
-        titleZh: "叙利亚的考古学：从复杂的狩猎采集者到早期城市社会（约公元前16,000–300年）",
-        authors: "Akkermans, P. & Schwartz, G.",
-        pdfUrl: "./pdf/akkermans-2003.pdf",
-        pdfZhUrl: "",
-      },
-      {
-        id: "allen-2019",
-        title: "Context and contents: Distinguishing variation in archaeobotanical assemblage formation processes at Early Halaf Fistıklı Höyük, Turkey",
-        titleZh: "背景与内容：区分土耳其早哈拉夫时期 Fistıklı Höyük 考古植物组合形成过程中的差异",
-        authors: "Allen, S.E.",
-        pdfUrl: "./pdf/allen-2019.pdf",
-        pdfZhUrl: "./pdf/allen-2019-zh.pdf",
-      },
-      {
-        id: "ferrio-2012",
-        title: "Agricultural expansion and settlement economy in Tell Halula (Mid-Euphrates valley): A diachronic study from early Neolithic to present",
-        titleZh: "哈鲁拉遗址（幼发拉底河中游）的农业扩张与聚落经济：从新石器时代早期至今的历时性研究",
-        authors: "Ferrio, J.P., Arab, G., Buxó, R., Guerrero, E., Molist, M., Voltas, J. and Araus, J.L.",
-        pdfUrl: "./pdf/ferrio-2012.pdf",
-        pdfZhUrl: "./pdf/ferrio-2012-zh.pdf",
-      },
-      {
-        id: "grossman-2013",
-        title: "Rethinking Halaf and Ubaid animal economies: hunting and herding at Tell Zeidan (Syria)",
-        titleZh: "重新审视哈拉夫与乌拜德时期的动物经济：叙利亚泽丹遗址的狩猎与畜牧业",
-        authors: "Grossman, K. and Hinman, M.",
-        pdfUrl: "./pdf/grossman-2013.pdf",
-        pdfZhUrl: "./pdf/grossman-2013-zh.pdf",
-      },
-      {
-        id: "jarl-2020",
-        title: "Plant cultivation under climatic fluctuations during the sixth and fifth millennia BC at Tell Tawila (northern Syria)",
-        titleZh: "公元前六至五千年气候波动下的植物种植：叙利亚北部塔维拉遗址研究",
-        authors: "Jarl, J., Riehl, S., Deckers, K. et al.",
-        pdfUrl: "./pdf/jarl-2020.pdf",
-        pdfZhUrl: "./pdf/jarl-2020-zh.pdf",
-      },
-      {
-        id: "kansa-2009",
-        title: "Resource exploitation at Late Neolithic Domuztepe: faunal and botanical evidence",
-        titleZh: "新石器时代晚期多穆兹特佩遗址的资源利用：动物与植物证据",
-        authors: "Kansa, S.W., Kennedy, A., Campbell, S. and Carter, E.",
-        pdfUrl: "./pdf/kansa-2009.pdf",
-        pdfZhUrl: "./pdf/kansa-2009-zh.pdf",
-      },
-      {
-        id: "mccorriston-1992",
-        title: "The Halaf environment and human activities in the Khabur drainage, Syria",
-        titleZh: "叙利亚哈布尔流域的哈拉夫时期环境与人类活动",
-        authors: "McCorriston, J.",
-        pdfUrl: "./pdf/mccorriston-1992.pdf",
-        pdfZhUrl: "./pdf/mccorriston-1992-zh.pdf",
-      },
-      {
-        id: "mccorriston-2002",
-        title: "Spatial and temporal variation in Mesopotamian agricultural practices in the Khabur Basin, Syrian Jazira",
-        titleZh: "叙利亚杰济拉地区哈布尔盆地的美索不达米亚农业实践时空变化",
-        authors: "McCorriston, J. and Weisberg, S.",
-        pdfUrl: "./pdf/mccorriston-2002.pdf",
-        pdfZhUrl: "./pdf/mccorriston-2002-zh.pdf",
-      },
-      {
-        id: "mccorriston-2007",
-        title: "Cultural and environmental history in archaeological charred woods from the Khabur drainage, upper Mesopotamia",
-        titleZh: "来自美索不达米亚上游哈布尔流域考古炭化木的文化与环境史研究",
-        authors: "McCorriston, J.",
-        pdfUrl: "./pdf/mccorriston-2007.pdf",
-        pdfZhUrl: "./pdf/mccorriston-2007-zh.pdf",
-      },
-      {
-        id: "moffet-2003",
-        title: "Wild and cultivated food plants and the evidence for crop processing activities at Arjoune",
-        titleZh: "阿尔朱恩遗址的野生与栽培食用植物及作物加工活动的证据",
-        authors: "Moffet, L.",
-        pdfUrl: "https://www.fulcrum.org/epubs/pz50gz01m#page=250",
-        pdfZhUrl: "",
-      }
-    ];
+    // 你的 Firebase 配置
+    const firebaseConfig = {
+      apiKey: "AIzaSyAIHucNO3Bd08-qk52EzFu2o2XNGpcrtkY",
+      authDomain: "archbib-c4c05.firebaseapp.com",
+      databaseURL: "https://archbib-c4c05-default-rtdb.firebaseio.com",
+      projectId: "archbib-c4c05",
+      storageBucket: "archbib-c4c05.firebasestorage.app",
+      messagingSenderId: "386009801086",
+      appId: "1:386009801086:web:c85cf4ab185c720aa6132f",
+      measurementId: "G-MHRPL4QY42"
+    };
+
+    // 初始化 Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const { useState, useEffect } = React;
 
     function App() {
       const [search, setSearch] = useState("");
-      const [bibliography, setBibliography] = useState(() => {
-        const stored = localStorage.getItem("bibliography");
-        return stored ? JSON.parse(stored) : initialBibliography;
-      });
+      const [bibliography, setBibliography] = useState([]);
+      const [newBib, setNewBib] = useState({ title: "", titleZh: "", authors: "", pdfUrl: "", pdfZhUrl: "" });
+      const [loading, setLoading] = useState(true);
 
+      // 获取数据
       useEffect(() => {
-        localStorage.setItem("bibliography", JSON.stringify(bibliography));
-      }, [bibliography]);
+        fetchBibliography();
+      }, []);
+
+      async function fetchBibliography() {
+        setLoading(true);
+        const querySnapshot = await getDocs(collection(db, "bibliography"));
+        setBibliography(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setLoading(false);
+      }
+
+      // 添加数据
+      async function handleAdd() {
+        if (!newBib.title || !newBib.authors) {
+          alert("Title and Authors are required!");
+          return;
+        }
+        await addDoc(collection(db, "bibliography"), newBib);
+        setNewBib({ title: "", titleZh: "", authors: "", pdfUrl: "", pdfZhUrl: "" });
+        fetchBibliography();
+      }
 
       const filtered = bibliography.filter(item =>
         item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -131,41 +86,60 @@
         if (url && url.trim() !== "") {
           return <a href={url} target="_blank" rel="noopener noreferrer">{text}</a>;
         }
-        return null; // 不显示任何东西
+        return null;
       };
 
       return (
         <div>
           <h1>Archaeobotany Bibliography</h1>
+
+          {/* 搜索框 */}
           <input
             type="text"
             placeholder="Search by title, author, or 中文标题..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          <table>
-            <thead>
-              <tr>
-                <th>Title / 标题</th>
-                <th>Authors</th>
-                <th>PDF (EN)</th>
-                <th>PDF (中文)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(item => (
-                <tr key={item.id}>
-                  <td>
-                    <div>{item.title}</div>
-                    <div className="zh">{item.titleZh}</div>
-                  </td>
-                  <td>{item.authors}</td>
-                  <td>{renderLink(item.pdfUrl, "View")}</td>
-                  <td>{renderLink(item.pdfZhUrl, "查看")}</td>
+
+          {/* 新增 Bib 表单 */}
+          <div className="form-container">
+            <h3>Add New Bibliography</h3>
+            <input placeholder="Title" value={newBib.title} onChange={e => setNewBib({...newBib, title: e.target.value})}/>
+            <input placeholder="中文标题" value={newBib.titleZh} onChange={e => setNewBib({...newBib, titleZh: e.target.value})}/>
+            <input placeholder="Authors" value={newBib.authors} onChange={e => setNewBib({...newBib, authors: e.target.value})}/>
+            <input placeholder="PDF URL" value={newBib.pdfUrl} onChange={e => setNewBib({...newBib, pdfUrl: e.target.value})}/>
+            <input placeholder="PDF 中文 URL" value={newBib.pdfZhUrl} onChange={e => setNewBib({...newBib, pdfZhUrl: e.target.value})}/>
+            <button onClick={handleAdd}>Add</button>
+          </div>
+
+          {/* 列表 */}
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Title / 标题</th>
+                  <th>Authors</th>
+                  <th>PDF (EN)</th>
+                  <th>PDF (中文)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(item => (
+                  <tr key={item.id}>
+                    <td>
+                      <div>{item.title}</div>
+                      <div className="zh">{item.titleZh}</div>
+                    </td>
+                    <td>{item.authors}</td>
+                    <td>{renderLink(item.pdfUrl, "View")}</td>
+                    <td>{renderLink(item.pdfZhUrl, "查看")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       );
     }
