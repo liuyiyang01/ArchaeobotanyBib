@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archaeobotany Bibliography</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f7f7f7; }
+    h1 { text-align: center; }
+    input { padding: 8px; width: 100%; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #eee; }
+    button { margin-right: 5px; padding: 4px 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const initialBibliography = [
+      {
+        id: "akkermans-2003",
+        title: "The archaeology of Syria: from complex hunter-gatherers to early urban societies (c. 16,000-300 BC)",
+        authors: "Akkermans, P. & Schwartz, G.",
+        pdfUrl: "./pdf/akkermans-2003.pdf",
+        pdfZhUrl: "./pdf/akkermans-2003-zh.pdf",
+      },
+      {
+        id: "allen-2019",
+        title: "Context and contents: Distinguishing variation in archaeobotanical assemblage formation processes at Early Halaf Fistıklı Höyük, Turkey",
+        authors: "Allen, S.E.",
+        pdfUrl: "./pdf/allen-2019.pdf",
+        pdfZhUrl: "./pdf/allen-2019-zh.pdf",
+      },
+      {
+        id: "ferrio-2012",
+        title: "Agricultural expansion and settlement economy in Tell Halula (Mid-Euphrates valley): A diachronic study from early Neolithic to present",
+        authors: "Ferrio, J.P., Arab, G., Buxó, R., et al.",
+        pdfUrl: "./pdf/ferrio-2012.pdf",
+        pdfZhUrl: "./pdf/ferrio-2012-zh.pdf",
+      },
+      // 你可以继续把剩余文献加在这里
+    ];
+
+    function App() {
+      const [search, setSearch] = useState("");
+      const [bibliography, setBibliography] = useState(() => {
+        const stored = localStorage.getItem("bibliography");
+        return stored ? JSON.parse(stored) : initialBibliography;
+      });
+
+      useEffect(() => {
+        localStorage.setItem("bibliography", JSON.stringify(bibliography));
+      }, [bibliography]);
+
+      const filtered = bibliography.filter(item =>
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.authors.toLowerCase().includes(search.toLowerCase())
+      );
+
+      return (
+        <div>
+          <h1>Archaeobotany Bibliography</h1>
+          <input
+            type="text"
+            placeholder="Search by title or author..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Authors</th>
+                <th>PDF (EN)</th>
+                <th>PDF (中文)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(item => (
+                <tr key={item.id}>
+                  <td>{item.title}</td>
+                  <td>{item.authors}</td>
+                  <td>
+                    {item.pdfUrl ? (
+                      <a href={item.pdfUrl} target="_blank">View</a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                  <td>
+                    {item.pdfZhUrl ? (
+                      <a href={item.pdfZhUrl} target="_blank">查看</a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
